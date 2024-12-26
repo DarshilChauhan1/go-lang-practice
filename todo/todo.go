@@ -4,15 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 
 type Todo struct {
-	id          int32
-	title       string
-	description string
-	done        bool
+    ID          int32  `json:"id"`
+    Title       string `json:"title"`
+    Description string `json:"description"`
+    Done        bool   `json:"done"`
 }
 
 var todos []Todo
@@ -43,9 +42,9 @@ func main() {
 		fmt.Printf("Enter the id of the todo to update: \n")
 		fmt.Scanln(&id)
 		fmt.Printf("Enter title: \n")
-		fmt.Scanln(&updateDto.title)
+		fmt.Scanln(&updateDto.Title)
 		fmt.Printf("Enter description: \n")
-		fmt.Scanln(&updateDto.description)
+		fmt.Scanln(&updateDto.Description)
 		updateTodo(id, updateDto)
 	case 4:
 		var id int32
@@ -62,55 +61,59 @@ func main() {
 }
 
 func addTodo() {
-	// take input from user
-	// create a new todo
-	// append the new todo to todo
+	bytesTodo, err := os.ReadFile("todos.json")
+    if err != nil {
+        fmt.Printf("Error reading todos file: %v\n", err)
+        return
+    }
+
+    err = json.Unmarshal(bytesTodo, &todos)
+    if err != nil {
+        fmt.Printf("Error unmarshalling todos: %v\n", err)
+        return
+    }
+	fmt.Printf("bytesTodo %v", bytesTodo)
+	fmt.Printf("todos  %v", todos)
+	
+
 	var todo Todo
 	fmt.Printf("Enter title: \n")
-	fmt.Scanln(&todo.title)
+	fmt.Scanln(&todo.Title)
 
 	fmt.Printf("Enter description: \n")
-	fmt.Scanln(&todo.description)
+	fmt.Scanln(&todo.Description)
 
 	fmt.Printf("Is the todo completed? (yes/no):")
 	var done string
 	fmt.Scanln(&done)
 
 	if done == "yes" {
-		todo.done = true
+		todo.Done = true
 	} else {
-		todo.done = false
+		todo.Done = false
 	}
-	// take the latest todo id
-	// increment the id
-	// assign the new id to the todo
 	if len(todos) > 0 {
-		todo.id = todos[len(todos)-1].id + 1
+		todo.ID = todos[len(todos)-1].ID + 1
 	} else {
-		todo.id = 1
+		todo.ID = 1
 	}
 	todos = append(todos, todo)
-	fmt.Printf("Todo added successfully\n", todos)
 	// Save todos to file after adding a new todo
 	saveTodos()
 }
 
 func listTodos() {
 	for _, todo := range todos {
-		fmt.Printf("ID: %d\n", todo.id)
-		fmt.Printf("Title: %s\n", todo.title)
-		fmt.Printf("Description: %s\n", todo.description)
-		fmt.Printf("Done: %t\n", todo.done)
+		fmt.Printf("ID: %d\n", todo.ID)
+		fmt.Printf("Title: %s\n", todo.Title)
+		fmt.Printf("Description: %s\n", todo.Description)
+		fmt.Printf("Done: %t\n", todo.Done)
 	}
 }
 
 func updateTodo(id int32, updateDto Todo) (Todo, error) {
-	// find the todo with the given id
-	// find the todo index
-	// update the todo with the given updateDto
-	// return the updated todo
 	for i, todo := range todos {
-		if todo.id == id {
+		if todo.ID == id {
 			todos[i] = updateDto
 			saveTodos()
 			return todos[i], nil
@@ -125,7 +128,7 @@ func deleteTodo(id int32) error {
 	// delete the todo
 	// return nil
 	for i, todo := range todos {
-		if todo.id == id {
+		if todo.ID == id {
 			todos = append(todos[:i], todos[i+1:]...)
 			saveTodos()
 			return nil
@@ -136,13 +139,14 @@ func deleteTodo(id int32) error {
 
 func saveTodos() {
 	// Save todos slice to a file
-	data, err := json.MarshalIndent(todos, "", "  ")
+	data, err := json.MarshalIndent(todos, "", "")
+	fmt.Printf("data: %v\n", data)
 	if err != nil {
 		fmt.Println("Error saving todos:", err)
 		return
 	}
 
-	err = ioutil.WriteFile("todos.json", data, 0644)
+	err = os.WriteFile("todos.json", data, 0644)
 	if err != nil {
 		fmt.Println("Error saving todos to file:", err)
 	}
@@ -150,7 +154,7 @@ func saveTodos() {
 
 func loadTodos() {
 	// Load todos from file
-	file, err := ioutil.ReadFile("todos.json")
+	file, err := os.ReadFile("todos.json")
 	if err != nil {
 		if os.IsNotExist(err) {
 			// If the file doesn't exist, don't worry about it
